@@ -1,0 +1,16 @@
+1
+C:/Users/nsn04/OneDrive/바탕 화면/intergrate/dist/intergrate/res/user/테스트.csv
+1
+1
+0
+1
+1
+오전,오후,저녁
+0
+1
+2
+C:\Users\nsn04\OneDrive\바탕 화면\intergrate\dist\intergrate\Result\작업 목록 데이터
+C:\Users\nsn04\OneDrive\바탕 화면\intergrate\dist\intergrate\Result\최종 결과
+C:\Users\nsn04\OneDrive\바탕 화면\intergrate\dist\intergrate\Result\요일 종합
+0
+C:\Users\nsn04\OneDrive\바탕 화면\intergrate\dist\intergrate\FolderList
