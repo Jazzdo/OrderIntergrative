@@ -43,7 +43,7 @@ restoreNumList = [] #refine된 재료 개수 카운트 리스트(출력 전용)
 DateSetName = [] #날짜 종류
 
 #============================================================
-#[프로그램] 종료시 실행 -Done
+#[프로그램] 메인 프로그램 종료시 실행
 #============================================================
 def exit_Function():
     global USERNAMEDIR_VAR
@@ -64,21 +64,19 @@ def exit_Function():
     print(TotalDate_Result_Save_Dir_Var.get(),file=closefile)
     print(RESULT_COMBO_VAR, file=closefile)
     print(Program_UseFile_Dir_Var.get(),file=closefile)
+    print(LOG_USE_VAR.get(), file=closefile)
     closefile.close()
 
 #============================================================
-#[프로그램]툴팁
+#[프로그램] 툴팁
 #============================================================
 class CreateToolTip(object):
-    '''
-    create a tooltip for a given widget
-    '''
+
     def __init__(self, widget, text='widget info'):
         self.widget = widget
         self.text = text
         self.widget.bind("<Enter>", self.enter)
         self.widget.bind("<Leave>", self.close)
-
 
     def enter(self, event=None):
         if ToolTipCheckbox_Var.get() == 1:
@@ -97,19 +95,20 @@ class CreateToolTip(object):
             label.pack(ipadx=1)
         else:
             pass
+
     def close(self, event=None):
         if ToolTipCheckbox_Var.get() == 1:
             if self.tw:
                 self.tw.destroy()
-
         else:
             pass
 #============================================================
-#[프로그램][메인 - 메뉴바 - 파일]파일 변환창 실행중 취소 -Done
+#[프로그램][메인 - 메뉴바 - 파일]파일 변환창 실행중 취소
 #============================================================
 def SubWindow_Convert_InfoWindow_Close_Cancle():
     infowindow.destroy()
     tkinter.messagebox.showwarning("확인", "취소 되었습니다.")
+    pLog.append_log("버튼 동작 실행: ", "파일 변환 취소")
 
 #============================================================
 #[메인 - 메뉴바 - 파일]파일 변환 hwp -> txt
@@ -170,6 +169,7 @@ def BTN_ConvertHWP():
             for file_name in files:
                 if file_name[-3:] == "hwp" or file_name[-3:] == "HWP" or file_name[-3:] == "Hwp":
                     #print("file: " + file_name)
+                    pLog.append_log("File: ", file_name)
                     LoadingfileText.set(file_name)
                     hwp.Open(os.path.join(root_path, file_name))  # 한/글로 열기
                     #hwp에 ,을 없애줘야 split(",")을 사용할수 있음
@@ -233,6 +233,7 @@ def Total_Result():
     #3. 파일을 내보내기 위해 필요한 각종 정보들을 만듬
     #4. 실질적인 내보내기
     if Total_list_Combo_Import.get() == "한글(.hwp)":
+        pLog.append_log("ImportVar: ", Total_list_Combo_Import.get())
         if DateSetCount > Total_listbox.size():
             for x in range(0,DateSetCount-Total_listbox.size()):
                 Total_listbox.insert(END,"Empty")
@@ -251,7 +252,7 @@ def Total_Result():
                 if TempTotalList[x][-4:] != ".hwp":
                     tkinter.messagebox.showwarning("경고", "불러들이는 파일의 확장자가 올바르지 않습니다.")
                     return
-        print(TempTotalList)
+        pLog.append_log("TempTotalList: ", TempTotalList)
         
         if len(TempTotalList)>0:
             #Total_list_Combo['values']=("한글(.hwp)", "엑셀(.xlsx)", "텍스트(.txt)")
@@ -359,7 +360,8 @@ def Total_Result():
                 leftList.append(rightList)
 
                 LocalTimeList.append(leftList)
-            print(LocalTimeList)
+            pLog.append_log("LocalTimeList: ", LocalTimeList)
+
 
             #0을 1로 변경
             for x in LocalTimeList:
@@ -372,7 +374,7 @@ def Total_Result():
             for x in LocalTimeList:
                 if len(x) > maxSizeOfLocalTimeList:
                     maxSizeOfLocalTimeList = len(x)
-            print(maxSizeOfLocalTimeList)
+            pLog.append_log("maxSizeOfLocalTimeList: ", maxSizeOfLocalTimeList)
             
             #최대 시간대 개수 로 통일
             for x in range(0, len(LocalTimeList)):
@@ -386,6 +388,7 @@ def Total_Result():
                 MaxLocalTime.append(max(t[x] for t in LocalTimeList))
 
             if Total_list_Combo_Export.get() == "한글(.hwp)":
+                pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
                 filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".hwp", filetypes=[("Hwp files", "*.hwp")])
                 hwp = win32.gencache.EnsureDispatch('HWPFrame.HwpObject')  # 한/글 열기
                 hwnd = win32gui.FindWindow(None, '빈 문서 1 - 한글')  # 해당 윈도우의 핸들값 찾기
@@ -540,6 +543,7 @@ def Total_Result():
                 hwp.SaveAs(filename)
 
             elif Total_list_Combo_Export.get()=="엑셀(.xlsx)":
+                pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
                 filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
                 if not filename:
                     return
@@ -614,10 +618,10 @@ def Total_Result():
                     
                     tempCol += 3
 
-                write_ws.merge_cells("A1:"+get_column_letter(DateSetCount*3)+"2")#TODO:5를 SetCount로 변경
+                write_ws.merge_cells("A1:"+get_column_letter(DateSetCount*3)+"2")
                 mergeCount = 1
                 for x in range(1,(DateSetCount*3)+1):
-                    write_ws.merge_cells(get_column_letter(mergeCount)+"3:"+get_column_letter(mergeCount+2)+"3")#TODO:5를 SetCount로 변경
+                    write_ws.merge_cells(get_column_letter(mergeCount)+"3:"+get_column_letter(mergeCount+2)+"3")
                     mergeCount+=3
 
                 write_ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
@@ -643,6 +647,7 @@ def Total_Result():
                 os.startfile(filename)
 
             elif Total_list_Combo_Export.get()=="텍스트(.txt)":
+                pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
                 filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".txt", filetypes=[("TXT files", "*.txt")])
                 if not filename:
                     return
@@ -680,6 +685,7 @@ def Total_Result():
                 os.startfile(filename)
 
     elif Total_list_Combo_Import.get() == "엑셀(.xlsx)":
+        pLog.append_log("ImportVar: ", Total_list_Combo_Import.get())
         if DateSetCount > Total_listbox.size():
             for x in range(0,DateSetCount-Total_listbox.size()):
                 Total_listbox.insert(END,"Empty")
@@ -698,8 +704,8 @@ def Total_Result():
                 if TempTotalList[x][-5:] != ".xlsx" :
                     tkinter.messagebox.showwarning("경고", "불러들이는 파일의 확장자가 올바르지 않습니다.")
                     return
-        print(TempTotalList)
-        print(len(TempTotalList))
+        pLog.append_log("TempTotalList: ", TempTotalList)
+        pLog.append_log("len(TempTotalList):", len(TempTotalList))
         
         if len(TempTotalList)>0:
             listText = []
@@ -722,7 +728,7 @@ def Total_Result():
                                 subListText.append(str(cell.value))
                 wb1.close()
                 listText.append(subListText)
-            print(listText)
+            pLog.append_log("listText: ", listText)
             LocalTimeList = [] #각 파일별 [오전,오후,저녁] 재료 항목의 개수를 모을 리스트
             #시간값이 포함된 결과물인지 확인용(사용자가 등록한 항목 개수 이상이면 시간값 포함)
             for x in range(0,len(listText)):#불러온 파일들
@@ -738,7 +744,7 @@ def Total_Result():
                         else:
                             lenListNum+=0
                     incount+=1
-                print(lenListNum)#총 재료의 길이 구하는거
+                pLog.append_log("lenListNum: ", lenListNum)
 
                 incount = 0
                 allList = [] #전부 박아둘 리스트
@@ -752,7 +758,7 @@ def Total_Result():
                         else:
                             allList.append(int(onlyNumber))
                     incount +=1
-                print("AllList: "+str(allList))
+                pLog.append_log("AllList: ", allList)
 
                 leftList = [] #리스트의 마지막을 제외한 재료 번호 중 끝값들
                 pastNum = 1
@@ -791,7 +797,7 @@ def Total_Result():
                 leftList.append(rightList)
 
                 LocalTimeList.append(leftList)
-            print(LocalTimeList)
+            pLog.append_log("LocalTimeList: ", LocalTimeList)
 
             #0을 1로 변경
             for x in LocalTimeList:
@@ -804,20 +810,23 @@ def Total_Result():
             for x in LocalTimeList:
                 if len(x) > maxSizeOfLocalTimeList:
                     maxSizeOfLocalTimeList = len(x)
-            print(maxSizeOfLocalTimeList)
+            pLog.append_log("maxSizeOfLocalTimeList: ", maxSizeOfLocalTimeList)
+
             
             #최대 시간대 개수 로 통일
             for x in range(0, len(LocalTimeList)):
                 if len(LocalTimeList[x]) <maxSizeOfLocalTimeList:
                     for y in range(0,maxSizeOfLocalTimeList-len(LocalTimeList[x])):
                         LocalTimeList[x].append(1)
-            print(LocalTimeList)
+            pLog.append_log("LocalTimeList: ", LocalTimeList)
+
             #각 파일별 시간대별 최대값 [오전 최댓값, 오후 최댓값, 저녁 최댓값...]
             MaxLocalTime = []        
             for x in range(0,maxSizeOfLocalTimeList):
                 MaxLocalTime.append(max(t[x] for t in LocalTimeList))
 
         if Total_list_Combo_Export.get() == "한글(.hwp)":
+            pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
             filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".hwp", filetypes=[("Hwp files", "*.hwp")])
             hwp = win32.gencache.EnsureDispatch('HWPFrame.HwpObject')  # 한/글 열기
             hwnd = win32gui.FindWindow(None, '빈 문서 1 - 한글')  # 해당 윈도우의 핸들값 찾기
@@ -972,6 +981,7 @@ def Total_Result():
             hwp.SaveAs(filename)
 
         elif Total_list_Combo_Export.get()=="엑셀(.xlsx)":
+            pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
             filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
             if not filename:
                 return
@@ -1046,10 +1056,10 @@ def Total_Result():
                 
                 tempCol += 3
 
-            write_ws.merge_cells("A1:"+get_column_letter(DateSetCount*3)+"2")#TODO:5를 SetCount로 변경
+            write_ws.merge_cells("A1:"+get_column_letter(DateSetCount*3)+"2")
             mergeCount = 1
             for x in range(1,(DateSetCount*3)+1):
-                write_ws.merge_cells(get_column_letter(mergeCount)+"3:"+get_column_letter(mergeCount+2)+"3")#TODO:5를 SetCount로 변경
+                write_ws.merge_cells(get_column_letter(mergeCount)+"3:"+get_column_letter(mergeCount+2)+"3")
                 mergeCount+=3
 
             write_ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
@@ -1075,6 +1085,7 @@ def Total_Result():
             os.startfile(filename)
 
         elif Total_list_Combo_Export.get()=="텍스트(.txt)":
+            pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
             filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".txt", filetypes=[("TXT files", "*.txt")])
             if not filename:
                 return
@@ -1112,6 +1123,7 @@ def Total_Result():
             os.startfile(filename)
 
     elif Total_list_Combo_Import.get() == "텍스트(.txt)":
+        pLog.append_log("ImportVar: ", Total_list_Combo_Import.get())
         if DateSetCount > Total_listbox.size():
             for x in range(0,DateSetCount-Total_listbox.size()):
                 Total_listbox.insert(END,"Empty")
@@ -1130,8 +1142,9 @@ def Total_Result():
                 if TempTotalList[x][-4:] != ".txt" :
                     tkinter.messagebox.showwarning("경고", "불러들이는 파일의 확장자가 올바르지 않습니다.")
                     return
-        print(TempTotalList)
-        print(len(TempTotalList))
+        pLog.append_log("TempTotalList: ", TempTotalList)
+        pLog.append_log("TempTotalListLen: ", len(TempTotalList))
+
         
         if len(TempTotalList)>0:
             listText = []
@@ -1159,7 +1172,7 @@ def Total_Result():
                     subListText1.append(subListText[x].lstrip(" "))
                 listText.append(subListText1)
 
-            print(listText)
+            pLog.append_log("listText: ", listText)
 
             LocalTimeList = [] #각 파일별 [오전,오후,저녁] 재료 항목의 개수를 모을 리스트
             #시간값이 포함된 결과물인지 확인용(사용자가 등록한 항목 개수 이상이면 시간값 포함)
@@ -1257,6 +1270,7 @@ def Total_Result():
                 MaxLocalTime.append(max(t[x] for t in LocalTimeList))
 
         if Total_list_Combo_Export.get() == "한글(.hwp)":
+            pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
             filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".hwp", filetypes=[("Hwp files", "*.hwp")])
             hwp = win32.gencache.EnsureDispatch('HWPFrame.HwpObject')  # 한/글 열기
             hwnd = win32gui.FindWindow(None, '빈 문서 1 - 한글')  # 해당 윈도우의 핸들값 찾기
@@ -1411,6 +1425,7 @@ def Total_Result():
             hwp.SaveAs(filename)
 
         elif Total_list_Combo_Export.get()=="엑셀(.xlsx)":
+            pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
             filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
             if not filename:
                 return
@@ -1485,10 +1500,10 @@ def Total_Result():
                 
                 tempCol += 3
 
-            write_ws.merge_cells("A1:"+get_column_letter(DateSetCount*3)+"2")#TODO:5를 SetCount로 변경
+            write_ws.merge_cells("A1:"+get_column_letter(DateSetCount*3)+"2")
             mergeCount = 1
             for x in range(1,(DateSetCount*3)+1):
-                write_ws.merge_cells(get_column_letter(mergeCount)+"3:"+get_column_letter(mergeCount+2)+"3")#TODO:5를 SetCount로 변경
+                write_ws.merge_cells(get_column_letter(mergeCount)+"3:"+get_column_letter(mergeCount+2)+"3")
                 mergeCount+=3
 
             write_ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
@@ -1514,6 +1529,7 @@ def Total_Result():
             os.startfile(filename)
 
         elif Total_list_Combo_Export.get()=="텍스트(.txt)":
+            pLog.append_log("ExportVar: ", Total_list_Combo_Export.get())
             filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=TotalDate_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".txt", filetypes=[("TXT files", "*.txt")])
             if not filename:
                 return
@@ -1554,6 +1570,7 @@ def Total_Result():
 #[요일별 종합 - 버튼] 빈 값 추가
 #============================================================
 def Total_Add_EmptyValue():
+    pLog.append_log("버튼 동작 실행: ", "빈 값 추가")
     global Total_treeNumCount
     global Total_listbox
     global DateSetCount
@@ -1566,6 +1583,7 @@ def Total_Add_EmptyValue():
 #[요일별 종합 - 버튼] 항목 추가
 #============================================================
 def Total_day_Add():
+    pLog.append_log("버튼 동작 실행: ", "항목 추가")
     if Total_list_Combo_Import.get() == "한글(.hwp)":
         original_path = filedialog.askopenfilename(initialdir=Program_Result_Save_Dir_Var.get(), multiple=True, title="Select file",
                                           filetypes=(("HWP files", "*.hwp"), ("all files", "*.*")))
@@ -1614,7 +1632,7 @@ def Total_day_Add():
 #[요일별 종합 - 프로그램] 항목 추가 - DND
 #============================================================
 def Total_day_Add_DnD(event):
-
+    pLog.append_log("버튼 동작 실행: ", "항목 추가 - 드래그드롭")
     global Total_treeNumCount
     global Total_listbox
     global DateSetCount
@@ -1664,6 +1682,7 @@ def Total_day_Add_DnD(event):
 #[요일별 종합 - 버튼] 항목 삭제
 #============================================================
 def Total_day_Del():
+    pLog.append_log("버튼 동작 실행: ", "항목 삭제")
     global Total_treeNumCount
     selected_item= Total_listbox.curselection()
     for item in selected_item[::-1]:
@@ -1674,6 +1693,7 @@ def Total_day_Del():
 #[요일별 종합 - 버튼] 전체 삭제
 #============================================================
 def Total_day_Del_All():
+    pLog.append_log("버튼 동작 실행: ", "전체 삭제")
     global Total_treeNumCount
     Total_listbox.delete(0,END)
     Total_treeNumCount = 1
@@ -1682,6 +1702,7 @@ def Total_day_Del_All():
 #[요일별 종합 - 버튼] 위로 올리기
 #============================================================
 def Total_List_MoveUp():
+    pLog.append_log("버튼 동작 실행: ", "항목 위로 순서 변경")
     try:
         idxs = Total_listbox.curselection()
         if not idxs:
@@ -1701,6 +1722,7 @@ def Total_List_MoveUp():
 #[요일별 종합 - 버튼] 아래로 내리기
 #============================================================
 def Total_List_MoveDown():
+    pLog.append_log("버튼 동작 실행: ", "항목 위로 순서 변경")
     global DateSetCount
     try:
         idxs = Total_listbox.curselection()
@@ -1718,6 +1740,7 @@ def Total_List_MoveDown():
 #[메인 - 메뉴바 - 요일별 종합] 요일별 종합 - 종료시
 #============================================================
 def Close_Total_days_Window():
+    pLog.append_log("버튼 동작 실행: ", "요일별 종합 창 종료")
     global date_root
     global isOnTotalWindow
     global DATE_TOTAL_IMPORT_COMBO_INIT
@@ -1727,11 +1750,13 @@ def Close_Total_days_Window():
     DATE_TOTAL_EXPORT_COMBO_INIT = Total_list_Combo_Export.current()
     date_root.destroy()
     isOnTotalWindow = 0
+
 #============================================================
 #[메인 - 메뉴바 - 요일별 종합] 요일별 종합
 #============================================================
 isOnTotalWindow = 0
 def BTN_Total_days():
+    pLog.append_log("버튼 동작 실행: ", "요일별 종합 창 실행")
     global isOnTotalWindow
     global Total_treeNumCount
     global Total_listbox
@@ -1824,10 +1849,12 @@ def BTN_Total_days():
         date_root.mainloop()
     else:
         tkinter.messagebox.showwarning("오류", "이미 창이 실행중입니다.")
+
 #============================================================
 #[메인 - 메뉴바 - 파일] 작업 목록 불러오기
 #============================================================
 def BTN_LoadList_txt():
+    pLog.append_log("버튼 동작 실행: ", "작업 목록 불러오기")
     global treeNumCount
     if treeNumCount >= 2:
         if tkinter.messagebox.askokcancel("목록 불러오기", "지금 하던 작업이 삭제됩니다.\n정말 불러 오시겠습니까?"):
@@ -1900,10 +1927,12 @@ def BTN_LoadList_txt():
                 listbox.tree.insert('',index= treeNumCount,iid=treeNumCount, values=(treeNumCount,tempList[1],tempList[2],tempList[3],tempList[4]))
                 treeNumCount+=1
         #listboxCount = treeNumCount
+
 #============================================================
 #[메인 - 메뉴바 - 파일] 작업 목록 불러오기 [단축키] Ctrl + o
 #============================================================
 def BTN_LoadList_txt_Key(event):
+    pLog.append_log("버튼 동작 실행: ", "작업 목록 불러오기[단축키]")
     global treeNumCount
     if treeNumCount >= 2:
         if tkinter.messagebox.askokcancel("목록 불러오기", "지금 하던 작업이 삭제됩니다.\n정말 불러 오시겠습니까?"):
@@ -1971,10 +2000,12 @@ def BTN_LoadList_txt_Key(event):
                 listbox.tree.insert('',index= treeNumCount,iid=treeNumCount, values=(treeNumCount,tempList[1],tempList[2],tempList[3],tempList[4]))
                 treeNumCount+=1
         #listboxCount = treeNumCount
+
 #============================================================
 #[메인 - 메뉴바 - 파일] 작업 목록 저장하기
 #============================================================
 def BTN_SaveList_txt():
+    pLog.append_log("버튼 동작 실행: ", "작업 목록 저장하기")
     filePath = filedialog.asksaveasfilename(initialdir=Program_Save_Dir_Var.get(),title="파일 저장",defaultextension=".txt",filetypes=[('txt file','*.txt')])
     if not filePath:
         return
@@ -1989,6 +2020,7 @@ def BTN_SaveList_txt():
 #[메인 - 메뉴바 - 파일] 작업 목록 저장하기 [단축키] Ctrl + S
 #============================================================
 def BTN_SaveList_txt_Key(event):
+    pLog.append_log("버튼 동작 실행: ", "작업 목록 저장하기[단축키]")
     filePath = filedialog.asksaveasfilename(initialdir=Program_Save_Dir_Var.get(),title="파일 저장",defaultextension=".txt",filetypes=[('txt file','*.txt')])
     if not filePath:
         return
@@ -2003,6 +2035,7 @@ def BTN_SaveList_txt_Key(event):
 #[사용자 등록 - 메뉴바 - 파일] 새 파일
 #============================================================
 def MenuBTN_NewFile():
+    pLog.append_log("버튼 동작 실행: ", "새 파일")
     CompanyNameEntry_Var.set("")
     CompanyAddressEntry_Var.set("")
     CompanyCEONameEntry_Var.set("")
@@ -2016,6 +2049,7 @@ def MenuBTN_NewFile():
 #[사용자 등록 - 메뉴바 - 파일] 유저 파일 열기
 #============================================================
 def MenuBTN_OpenFile():
+    pLog.append_log("버튼 동작 실행: ", "유저 파일 열기")
     filePath = filedialog.askopenfilename(initialdir="./res/user",title="파일 열기",defaultextension=".csv",filetypes=[('csv file','*.csv')])
     if not filePath:
         return
@@ -2041,6 +2075,7 @@ def MenuBTN_OpenFile():
 #[사용자 등록 - 메뉴바 - 파일] 유저 파일 저장
 #============================================================
 def MenuBTN_SaveFile():
+    pLog.append_log("버튼 동작 실행: ", "유저 파일 저장")
     filePath = filedialog.asksaveasfilename(initialdir="./res/user",title="파일 저장",defaultextension=".csv",filetypes=[('csv file','*.csv')])
     if not filePath:
         return
@@ -2060,7 +2095,7 @@ def MenuBTN_SaveFile():
 #[사용자 등록 - 메뉴바 - 설정] 사용할 유저 설정
 #============================================================
 def MenuBTN_UserSetting():
-    pLog.append_log("사용자 등록창 :" ,"사용할 유저 설정 실행")
+    pLog.append_log("버튼 동작 실행: " ,"사용할 유저 설정")
     global USERNAMEDIR_VAR
     filePath = filedialog.askopenfilename(initialdir="./res/user",title="파일 열기",defaultextension=".csv",filetypes=[('csv file','*.csv')])
     #print(filePath)
@@ -2074,9 +2109,14 @@ def MenuBTN_UserSetting():
     NowSettingFile.set(C_fileName)
     USERNAMEDIR_VAR = strx
 
+#============================================================
+#[사용자 등록] 유저 설정 폴더 실행
+#============================================================
 def BTN_Open_UserFolder():
+    
     pLog.append_log("유저 폴더 실행: ",MY_OS_GETCWD+"\\res\\user")
     os.startfile(MY_OS_GETCWD+"\\res\\user")
+
 #============================================================
 #[메인 - 메뉴바 - 설정] 제외시킬 재료 설정
 #[메인 - 우측패널 - 수량 입력 - 버튼] 제외시킬 재료
@@ -2085,12 +2125,12 @@ def MenuBTN_OpenBan():
     pLog.append_log("벤 파일 실행: ",MY_OS_GETCWD+'\\res\\banList\\BanListFile.txt')
     os.startfile(MY_OS_GETCWD+'\\res\\banList\\BanListFile.txt')
     
-
 #============================================================
 #[메인- 메뉴바 - 설정]사용자 설정
 #============================================================
 def BTN_Regist():
-    pLog.append_log("버튼 클릭 실행:","메뉴바 - 사용자 설정")
+
+    pLog.append_log("버튼 동작 실행:","메뉴바 - 사용자 설정")
     Regist_window=Toplevel()
     Regist_window.title("사용자 등록")
     Regist_window.geometry("500x250+250+300")
@@ -2196,6 +2236,7 @@ def BTN_Regist():
 #[메인- 탑패널] 이름 클릭
 #============================================================
 def BTN_Regist_click(event):
+
     pLog.append_log("이름 클릭:","창 실행")
     Regist_window=Toplevel()
     Regist_window.title("사용자 등록")
@@ -2219,7 +2260,6 @@ def BTN_Regist_click(event):
     menu2.add_command(label="사용할 유저 설정",command= MenuBTN_UserSetting)
     menu2.add_command(label="유저 목록 폴더 열기",command= BTN_Open_UserFolder)
     menubar.add_cascade(label="설정",menu=menu2)
-
     
 
     CompanyNameText = Label(Regist_window,text="【업체명】",background="gainsboro",justify="left")
@@ -2321,10 +2361,11 @@ def BTN_SettingReset():
         print(MY_OS_GETCWD+"\\Result\\요일 종합",file=userfile)#13
         print(0,file=userfile)#14
         print(MY_OS_GETCWD+"\\FolderList",file=userfile)#15
+        print(0,file=userfile)#16
         userfile.close()
         NowSettingFile.set("")
         USERNAMEDIR_VAR = ""
-        
+        tkinter.messagebox.showwarning("알림", "완료 되었습니다.\n 프로그램 설정후 재 시작을 권장합니다.")
         if os.path.exists("./TempFileList"):
             for file in os.scandir("./TempFileList"):
                 os.remove(file.path)
@@ -2332,7 +2373,9 @@ def BTN_SettingReset():
             pass
                 #tkinter.messagebox.showwarning("확인", "경로를 찾을수 없습니다.")
 
-
+#============================================================
+#[메인 - 메뉴바 - 설정] 프로그램 설정창 - 시간값 설정
+#============================================================
 def BTN_settingTime():
     pLog.append_log("버튼 동작 실행:", "시간값 설정")
     global SettingProgram_window
@@ -2348,6 +2391,9 @@ def BTN_settingTime():
     pLog.append_log("tempKindTime 값: ", tempKindTime)
     pLog.append_log("TimeKind_Var 값:", TimeKind_Var.get())
 
+#============================================================
+#[메인 - 메뉴바 - 설정] 프로그램 설정창 - 경로 설정
+#============================================================
 def BTN_DirSetting():
     pLog.append_log("버튼 동작 실행:", "경로 설정")
     global Program_UseFile_Dir_Entry
@@ -2364,8 +2410,16 @@ def BTN_DirSetting():
     pLog.append_log("Program_Save_Dir_Var 설정값:", Program_Save_Dir_Var.get())
     pLog.append_log("Program_Result_Save_Dir_Var 설정값:", Program_Result_Save_Dir_Var.get())
     pLog.append_log("TotalDate_Result_Save_Dir_Var 설정값:", TotalDate_Result_Save_Dir_Var.get())
+    tkinter.messagebox.showinfo("알림", "경로 설정이 완료 되었습니다.\n 프로그램을 재시작 하는것을 권장합니다.")
+
+def BTN_Log_Visible_Setting():
+    #0:체크해제(사용 안함) 1: 체크 (사용)
+    if LOG_USE_VAR.get() == 0:
+        pLog.hide()
+    else:
+        pLog.show()
 #============================================================
-#[메인 - 메뉴바 - 설정] 프로그램 설정
+#[메인 - 메뉴바 - 설정] 프로그램 설정창
 #============================================================
 def BTN_SettingProgram():
     pLog.append_log("버튼 동작 실행:", "프로그램 설정 창 실행")
@@ -2391,16 +2445,16 @@ def BTN_SettingProgram():
     SettingProgram_window_Frame1=tkinter.Frame(SettingProgram_window)
     notebook.add(SettingProgram_window_Frame1, text="프로그램 설정")
 
-    DarkMode_CheckBox=Checkbutton(SettingProgram_window_Frame1,text="다크 모드",variable=DARKMODE_VAR,background="lightblue")
+    DarkMode_CheckBox=Checkbutton(SettingProgram_window_Frame1,text="다크 모드",variable=DARKMODE_VAR)
     DarkMode_CheckBox.place(x=15,y=20)
 
     DarkMode_Button = tkinter.Button(SettingProgram_window_Frame1, text='적용', command=BTN_DarkMode, overrelief="solid")
     DarkMode_Button.place(x=125,y=20)
 
-    ToolTip_CheckBox=Checkbutton(SettingProgram_window_Frame1,text="툴팁 사용",variable=ToolTipCheckbox_Var,background="lightblue")
+    ToolTip_CheckBox=Checkbutton(SettingProgram_window_Frame1,text="툴팁 사용",variable=ToolTipCheckbox_Var)
     ToolTip_CheckBox.place(x=15,y=60)
 
-    TimeKind_Text = Label(SettingProgram_window_Frame1, text="시간 적용값", background="lightblue")
+    TimeKind_Text = Label(SettingProgram_window_Frame1, text="시간 적용값")
     TimeKind_Text.place(x=15,y=100)
 
     DateTimeKind_Entry = Entry(SettingProgram_window_Frame1, width=20, textvariable=TimeKind_Var)
@@ -2417,73 +2471,69 @@ def BTN_SettingProgram():
     SettingProgram_window_Frame2=tkinter.Frame(SettingProgram_window)
     notebook.add(SettingProgram_window_Frame2, text="경로 설정")
 
-    Program_UseFile_Dir_Text = Label(SettingProgram_window_Frame2, text="사용할 폴더 경로", background="lightblue")
-    Program_UseFile_Dir_Text.place(x=15,y=160)
+    Program_UseFile_Dir_Text = Label(SettingProgram_window_Frame2, text="사용할 폴더 경로")
+    Program_UseFile_Dir_Text.place(x=15,y=20)
 
-    Program_UseFile_Dir_Entry = Entry(SettingProgram_window_Frame2, width=35, textvariable=Program_UseFile_Dir_Var)
-    Program_UseFile_Dir_Entry.place(x=15,y=180)
+    Program_UseFile_Dir_Entry = Entry(SettingProgram_window_Frame2, width=45, textvariable=Program_UseFile_Dir_Var)
+    Program_UseFile_Dir_Entry.place(x=15,y=40)
     
     
-    Program_Save_Dir_Text = Label(SettingProgram_window_Frame2, text="작업목록 저장 경로", background="lightblue")
-    Program_Save_Dir_Text.place(x=15,y=210)
+    Program_Save_Dir_Text = Label(SettingProgram_window_Frame2, text="작업목록 저장 경로")
+    Program_Save_Dir_Text.place(x=15,y=70)
 
-    Program_Save_Dir_Entry = Entry(SettingProgram_window_Frame2, width=35, textvariable=Program_Save_Dir_Var)
-    Program_Save_Dir_Entry.place(x=15,y=230)
+    Program_Save_Dir_Entry = Entry(SettingProgram_window_Frame2, width=45, textvariable=Program_Save_Dir_Var)
+    Program_Save_Dir_Entry.place(x=15,y=90)
 
-    Program_Result_Save_Dir_Text = Label(SettingProgram_window_Frame2, text="결과 저장 경로", background="lightblue")
-    Program_Result_Save_Dir_Text.place(x=15,y=260)
+    Program_Result_Save_Dir_Text = Label(SettingProgram_window_Frame2, text="결과 저장 경로")
+    Program_Result_Save_Dir_Text.place(x=15,y=120)
 
-    Program_Result_Save_Dir_Entry = Entry(SettingProgram_window_Frame2, width=35, textvariable=Program_Result_Save_Dir_Var)
-    Program_Result_Save_Dir_Entry.place(x=15,y=280)
+    Program_Result_Save_Dir_Entry = Entry(SettingProgram_window_Frame2, width=45, textvariable=Program_Result_Save_Dir_Var)
+    Program_Result_Save_Dir_Entry.place(x=15,y=140)
 
-    TotalDate_Result_Save_Dir_Text = Label(SettingProgram_window_Frame2, text="요일별 결과 저장 경로", background="lightblue")
-    TotalDate_Result_Save_Dir_Text.place(x=15,y=310)
+    TotalDate_Result_Save_Dir_Text = Label(SettingProgram_window_Frame2, text="요일별 결과 저장 경로")
+    TotalDate_Result_Save_Dir_Text.place(x=15,y=170)
 
-    TotalDate_Result_Save_Dir_Entry = Entry(SettingProgram_window_Frame2, width=35, textvariable=TotalDate_Result_Save_Dir_Var)
-    TotalDate_Result_Save_Dir_Entry.place(x=15,y=330)
+    TotalDate_Result_Save_Dir_Entry = Entry(SettingProgram_window_Frame2, width=45, textvariable=TotalDate_Result_Save_Dir_Var)
+    TotalDate_Result_Save_Dir_Entry.place(x=15,y=190)
 
-    Save_Dir_Button = tkinter.Button(SettingProgram_window_Frame2, text='경로\n적용', command=BTN_DirSetting, overrelief="solid",height=7)
-    Save_Dir_Button.place(x=305,y=180)
+    Save_Dir_Button = tkinter.Button(SettingProgram_window_Frame2, text='경로 적용', command=BTN_DirSetting, overrelief="solid")
+    Save_Dir_Button.place(x=400,y=5)
 
 
     SettingProgram_window_Frame3=tkinter.Frame(SettingProgram_window)
     notebook.add(SettingProgram_window_Frame3, text="로그")
 
-    label3=tkinter.Label(SettingProgram_window_Frame3, text="페이지4의 내용")
-    label3.pack()
+    LogMode_CheckBox=Checkbutton(SettingProgram_window_Frame3,text="로그 사용",variable=LOG_USE_VAR)
+    LogMode_CheckBox.place(x=15,y=20)
 
-    # frame4=tkinter.Frame(SettingProgram_window)
-    # notebook.insert(2, frame4, text="페이지3")
+    LogMode_Button = tkinter.Button(SettingProgram_window_Frame3, text='적용', command=BTN_Log_Visible_Setting, overrelief="solid")
+    LogMode_Button.place(x=125,y=20)
 
-    # label4=tkinter.Label(frame4, text="페이지3의 내용")
-    # label4.pack()
 #============================================================
-#GUI_LOG
+#[프로그램]LOG
 #============================================================
 class GUIT():
     def __init__(self):
-        self.tkhandler = Tk()
+        self.tkhandler = Toplevel()
         self.tkhandler.geometry('800x760')
         self.tkhandler.title('Program Log')
 
         ###################공간띄우기##########################
         self.label_title = Label(self.tkhandler, text='')
         self.label_title.grid(row=0, column=0, sticky="w")
-        ######################################################
  
-        # 텍스트박스에 스크롤 연결
         self.scroll = Scrollbar(self.tkhandler, orient='vertical')
-        self.lbox = Listbox(self.tkhandler, yscrollcommand=self.scroll.set, width=116,height=40,background="#161618",fg="white")
+        self.lbox = Listbox(self.tkhandler, yscrollcommand=self.scroll.set, width=100,height=45,background="#161618",fg="white")
         self.scroll.config(command=self.lbox.yview)
         self.lbox.grid(row=0, column=0, columnspan=5, sticky="s")
- 
+        self.tkhandler.protocol('WM_DELETE_WINDOW', self.hide)
 
     def append_log(self, comment, msg):
         global now
         self.now = str(datetime.datetime.now())[0:-7]
-        cutLength = 100 
+        cutLength = 75
         Tempmsg = [msg[i:i+cutLength] for i in range(0, len(msg), cutLength)]
-        if len(msg)+len(comment) > 100 or len(msg) > 100 or len(comment)>100:
+        if len(msg)+len(comment) > 75 or len(msg) > 75 or len(comment)>75:
             self.lbox.insert(END, "[{}] {}".format(self.now, comment))
             for x in range(0,len(Tempmsg)):
                 self.lbox.insert(END, "{}".format(Tempmsg[x]))
@@ -2491,8 +2541,20 @@ class GUIT():
             self.lbox.insert(END, "[{}] {} {}".format(self.now,comment, msg))
         self.lbox.update()
         self.lbox.see(END)
+
+    def CloseHide(self):
+        self.tkhandler.withdraw()
+        LOG_USE_VAR.set(0)
+
     def run(self):
         self.tkhandler.mainloop()
+
+    def show(self):
+        self.tkhandler.deiconify()
+    
+    def hide(self):
+        self.tkhandler.withdraw()
+
 
 #============================================================
 #[메인 - 메뉴바 - 도움말] 상세 사용법
@@ -2512,12 +2574,11 @@ def BTN_Net_Key(event):
     webbrowser.open(url)
 
 #============================================================
-#다크 모드  [] - Done
+#다크 모드
 #============================================================
 def BTN_DarkMode():
     pLog.append_log("버튼 동작 실행:", "다크모드 동작: {}".format(DARKMODE_VAR.get()))
     #0 = 일반 모드, 1 = 다크모드, 2 = 사용자 지정 모드
-
 
     if DARKMODE_VAR.get() == 1:
         #topFrame.config(bg="black")
@@ -2572,6 +2633,7 @@ def BTN_DarkMode():
         Right_Empty_Export_Button.config(background="#2e313d", foreground="white")
         Right_Result_Export_Button.config(background="#2e313d", foreground="white")
         Right_TotalResult_Export_Button.config(background="#2e313d", foreground="white")
+
 
     elif DARKMODE_VAR.get() == 0:
         #topFrame.config(bg="darkgray")
@@ -2848,6 +2910,7 @@ def BTN_ALL_RemoveItem_RootMenu():
         treeNumCount = 1
         for y in listbox.tree.get_children():
             listbox.tree.delete(y)
+
 #============================================================
 #[메인 - 메뉴바 - 파일] 새 파일 [단축키] Ctrl + N
 #============================================================   
@@ -2863,22 +2926,26 @@ def BTN_ALL_RemoveItem_RootMenu_Key(event):
         treeNumCount = 1
         for y in listbox.tree.get_children():
             listbox.tree.delete(y)
+
 #============================================================
-#[메인 - 항목 - 버튼] 폴더열기 
+#[메인 - 항목 - 버튼] 유저 설정 폴더열기 
 #============================================================  
 def BTN_Start_AddItem():
+    pLog.append_log("버튼 동작 실행:","유저 설정 폴더 실행")
     os.startfile(Program_UseFile_Dir_Var.get())
+
 #============================================================
 #[프로그램][수량 입력]수량 입력창 활성화 될때 
 #============================================================
 def focus_InputNum(event):
+    
     Right_InputNum_Entry.delete(0,END)
 
 #============================================================
 #[메인 - 우측패널 - 수량 입력] 수량 추가 [엔터키]
 #============================================================
 def BTN_InputNum_Return(event):
-    
+    pLog.append_log("버튼 동작 실행:","수량 추가[엔터키]")
     if Right_InputNum_Entry.get() != "":
         if Right_InputNum_Entry.get().isdigit() == True:
             for x in listbox.tree.selection():
@@ -2890,7 +2957,7 @@ def BTN_InputNum_Return(event):
 #[메인 - 우측패널 - 수량 입력 - 버튼] 수량 추가
 #============================================================
 def BTN_InputNum():
-    
+    pLog.append_log("버튼 동작 실행:","수량 추가")
     if Right_InputNum_Entry.get() != "":
         if Right_InputNum_Entry.get().isdigit() == True:
             for x in listbox.tree.selection():
@@ -2902,6 +2969,7 @@ def BTN_InputNum():
 #[메인 - 우측패널 - 날짜 입력] 날짜 입력
 #============================================================
 def BTN_InputDate():
+    pLog.append_log("버튼 동작 실행:","날짜 입력")
     try:
         Right_InputDate1_Entry_Week.set(days[datetime.date(int(Right_InputDate1_Entry_Date.get().split(".")[0]),int(Right_InputDate1_Entry_Date.get().split(".")[1]),int(Right_InputDate1_Entry_Date.get().split(".")[2])).weekday()])
         Right_InputDate2_Entry_Week.set(days[datetime.date(int(Right_InputDate2_Entry_Date.get().split(".")[0]),int(Right_InputDate2_Entry_Date.get().split(".")[1]),int(Right_InputDate2_Entry_Date.get().split(".")[2])).weekday()])
@@ -2918,6 +2986,7 @@ def BTN_InputDate():
 #[메인 - 우측패널 - 날짜 입력 - 버튼] 입력 확인
 #============================================================
 def BTN_InputDate_Check():
+    pLog.append_log("버튼 동작 실행:","날짜 입력 확인")
     try:
         Right_InputDate1_Entry_Week.set(days[datetime.date(int(Right_InputDate1_Entry_Date.get().split(".")[0]),int(Right_InputDate1_Entry_Date.get().split(".")[1]),int(Right_InputDate1_Entry_Date.get().split(".")[2])).weekday()])
         Right_InputDate2_Entry_Week.set(days[datetime.date(int(Right_InputDate2_Entry_Date.get().split(".")[0]),int(Right_InputDate2_Entry_Date.get().split(".")[1]),int(Right_InputDate2_Entry_Date.get().split(".")[2])).weekday()])
@@ -2934,7 +3003,7 @@ def BTN_InputDate_Check():
 #[메인 - 우측패널 - 시간대 입력 - 버튼] 확인
 #============================================================
 def BTN_InputTimeNum():
-    
+    pLog.append_log("버튼 동작 실행: ","시간대 적용")
     if Right_Time_Combo.get() != "":
             for x in listbox.tree.selection():
                 listbox.tree.item(x, text="",values=(listbox.tree.item(x).get('values')[0],listbox.tree.item(x).get('values')[1],listbox.tree.item(x).get('values')[2],listbox.tree.item(x).get('values')[3],Right_Time_Combo.get()))
@@ -2946,6 +3015,7 @@ def BTN_InputTimeNum():
 #[메인 - 상단패널 - 버튼] 검색 [엔터]
 #============================================================
 def BTN_SearchItem_Return(event):
+    pLog.append_log("버튼 동작 실행[검색] [엔터키]: ",Top_Search_Entry.get())
     isCount = False  
     for child in listbox.tree.get_children():
         if Top_Combo.get() == "번호":
@@ -2980,6 +3050,7 @@ def BTN_SearchItem_Return(event):
 #[메인 - 상단패널 - 버튼] 검색
 #============================================================
 def BTN_SearchItem():
+    pLog.append_log("버튼 동작 실행[검색]: ",Top_Search_Entry.get())
     isCount = False  
     for child in listbox.tree.get_children():
         if Top_Combo.get() == "번호":
@@ -3014,6 +3085,7 @@ def BTN_SearchItem():
 #[메인 - 우측패널 - 특이사항 - 버튼] 입력 확인
 #============================================================
 def BTN_UniquenessText():
+    pLog.append_log("버튼 동작 실행: ","특이 사항 입력 확인")
     tkinter.messagebox.showinfo("입력 확인", Right_Uniqueness_Entry.get())
 
 
@@ -3024,7 +3096,7 @@ refineList = []
 TempRefineList = []
 refineListItemName = []
 def refine_table():
-
+    pLog.append_log("데이터 정제 시작: ","시간값 미포함")
     global TempRefineList
     global refineList
     global refineListItemName
@@ -3211,14 +3283,14 @@ def refine_table():
     # with open('./TempFileList/Result1.csv', 'w', encoding='utf-8') as fileT:
     #     writer = csv.writer(fileT)
     #     writer.writerow(TempRefineList)
-
+    pLog.append_log("데이터 정제 완료: ",refineList)
 #============================================================
 #[프로그램]내보낼 데이터 정제
 #============================================================
 refineList = []
 TempRefineList = []
 def refine_table_Time():
-
+    pLog.append_log("데이터 정제 시작: ","시간값 포함")
     global refineList
     global TempRefineList
     global restoreNumList
@@ -3245,7 +3317,7 @@ def refine_table_Time():
     for x in range(0,len(tempKindTime)):
         tempKindTime[x]=tempKindTime[x].replace(" ","")
     print("사용자 시간 값: "+str(tempKindTime))
-    #TODO: 사용자가 설정한 시간값에 개수를 맞춰야함
+
     #사용자 설정값 - tree 값
     #오전 오후 저녁 - 오전 저녁 = 오후
     #오전 오후 저녁 - 오전 오후 저녁 기타 = 기타
@@ -3460,7 +3532,8 @@ def refine_table_Time():
     # with open('./TempFileList/Result1.csv', 'w', encoding='utf-8') as fileT:
     #     writer = csv.writer(fileT)
     #     writer.writerow(TempRefineList)
-
+    pLog.append_log("데이터 정제 완료: ",refineList)
+    pLog.append_log("restoreNumList: ",restoreNumList)
 
 #if RemoveTimeCheckbox_Var.get() == 1: #시간값 제거 하겠다(기본값)
 #============================================================
@@ -3528,9 +3601,17 @@ def hwp_createTable(hwp,representTable_col_var,representTable_row_var,representT
     hwp.HParameterSet.HTableCreation.TableProperties.Width = hwp.MiliToHwpUnit(1)  # 표 너비
     hwp.HAction.Execute("TableCreate", hwp.HParameterSet.HTableCreation.HSet)
 
-#
+#============================================================
+#[메인 - 우측패널 - 버튼] 결과 내보내기 - 빈문서
+#============================================================
+#제목: 발주서
+#표1:업체명 ,업체 주소 ,대표명, 대표 전화번호, 대표 메일
+#표2:납품 장소, 구매 담당자, 담당자 전화
+#표3: 특이사항
+#표4:번호, 재료명, 규격, 단위, 수량, 비고
 def BTN_Empty_Result():
     pLog.append_log("버튼 동작 실행","Empty_Result 실행")
+    pLog.append_log("Right_Result_Combo.get():",Right_Result_Combo.get())
     if Right_Result_Combo.get() == "한글":
         hwp = win32.gencache.EnsureDispatch('HWPFrame.HwpObject')  # 한/글 열기
         hwnd = win32gui.FindWindow(None, '빈 문서 1 - 한글')  # 해당 윈도우의 핸들값 찾기
@@ -3697,7 +3778,17 @@ def BTN_Empty_Result():
         print("번호, 재료명, 규격, 단위, 수량, 비고\n", file = data)
         os.startfile(filename)
 
+#============================================================
+#[메인 - 우측패널 - 버튼] 결과 내보내기 [hwp, excel, txt]
+#============================================================
+#제목: 발주서
+#표1:업체명 ,업체 주소 ,대표명, 대표 전화번호, 대표 메일
+#표2:납품 장소, 구매 담당자, 담당자 전화
+#표3: 특이사항
+#표4:번호, 재료명, 규격, 단위, 수량, 비고
 def BTN_Result():
+    pLog.append_log("버튼 동작 실행: ","Result 실행")
+    pLog.append_log("Right_Result_Combo.get():",Right_Result_Combo.get())
     if treeNumCount >= 2:
         if Right_Result_Combo.get() == "한글":
             global refineListItemName
@@ -4542,18 +4633,12 @@ def BTN_Result():
                 fd.write(s[i])
             fd.close() 
             os.startfile(filename)
+
+
+
 #============================================================
-#[메인 - 우측패널 - 버튼] 결과 내보내기 HWP_빈문서
+#[프로그램] 엑셀 테두리 ver1
 #============================================================
-#제목: 발주서
-#표1:업체명 ,업체 주소 ,대표명, 대표 전화번호, 대표 메일
-#표2:납품 장소, 구매 담당자, 담당자 전화
-#표3: 특이사항
-#표4:번호, 재료명, 규격, 단위, 수량, 비고
-
-
-
-#이건 표의 테두리를 굵게 해주는것임
 def create_lineBox(ws,_c1,_n1,_c2,_n2): #c1:문자(좌), n1:숫자(좌), c2:문자(우), n2:숫자(우)
 
     #만약 높이가 한칸일때 
@@ -4584,6 +4669,9 @@ def create_lineBox(ws,_c1,_n1,_c2,_n2): #c1:문자(좌), n1:숫자(좌), c2:문�
             else:
                 ws[chr(i)+str(_n2)].border = Border(bottom=Side(style="medium"))
 
+#============================================================
+#[프로그램] 엑셀 테두리 ver2
+#============================================================
 def create_lineBox_ForList(ws,_c1,_n1,_c2,_n2): #c1:문자(좌), n1:숫자(좌), c2:문자(우), n2:숫자(우)
 
     #만약 높이가 한칸일때 
@@ -4611,8 +4699,9 @@ def create_lineBox_ForList(ws,_c1,_n1,_c2,_n2): #c1:문자(좌), n1:숫자(좌),
                 ws[chr(i)+str(_n2-1)].border = Border(bottom=Side(style="medium"),left=Side(style="medium"))
             else:
                 ws[chr(i)+str(_n2-1)].border = Border(bottom=Side(style="medium"))
+
 #============================================================
-#[프로그램] 엑셀 테두리 
+#[프로그램] 엑셀 테두리 ver3
 #============================================================
 def set_border(ws, cell_range, inputStyle):
     rows = ws[cell_range]
@@ -4631,6 +4720,9 @@ def set_border(ws, cell_range, inputStyle):
     rows[-1][0].border = Border(left=Side(style=inputStyle), bottom=Side(style=inputStyle))
     rows[-1][-1].border = Border(right=Side(style=inputStyle), bottom=Side(style=inputStyle))
 
+#============================================================
+#[프로그램] 좌측 트리 박스
+#============================================================
 class MultiListBox(object):
     def __init__(self):
         self.tree = None
@@ -4685,6 +4777,7 @@ class MultiListBox(object):
 #[프로그램] 날짜 업데이트
 #============================================================
 def update_date(event):
+    pLog.append_log("날짜 최신화","")
     Right_InputDate1_Entry_Week.set(days[datetime.date(int(Right_InputDate1_Entry_Date.get().split(".")[0]),int(Right_InputDate1_Entry_Date.get().split(".")[1]),int(Right_InputDate1_Entry_Date.get().split(".")[2])).weekday()])
     Right_InputDate2_Entry_Week.set(days[datetime.date(int(Right_InputDate2_Entry_Date.get().split(".")[0]),int(Right_InputDate2_Entry_Date.get().split(".")[1]),int(Right_InputDate2_Entry_Date.get().split(".")[2])).weekday()])
     
@@ -4713,7 +4806,7 @@ def LeaveNameInfoLabel(event):
     Top_Name_info_Label_w.config(bg="lightgray")
     Top_Name_info_Label.config(bg="lightgray")
 
-#TODO:무 개수 정의 파싱
+
 #============================================================
 #[프로그램] MainLoop
 #============================================================
@@ -4722,7 +4815,7 @@ if __name__ == "__main__":
     root.title("발주 종합")
     MY_OS_GETCWD = os.getcwd().replace("\\","/")
     print(MY_OS_GETCWD)
-    root.geometry("800x660+550+200")
+    root.geometry("800x640+550+200")
     root.option_add("*Font","맑은고딕 12")
     root.resizable(False, False) #창 사이즈 변경 불가능
     root.iconbitmap(MY_OS_GETCWD + '/res/icon.ico')
@@ -4730,8 +4823,8 @@ if __name__ == "__main__":
     root.attributes('-topmost', False)
     pLog = GUIT()
     # 1 시작시 보이는 메세지 'append_log'
-    pLog.append_log("",'프로그램을 시작했습니다.')
-    pLog.append_log("작업 파일",MY_OS_GETCWD)
+    
+    
     SearchRadioValue = IntVar(None,1) #RIGHT_Frame 라디오 버튼 선택중인 값
     days = ['월요일','화요일','수요일','목요일','금요일','토요일','일요일']
     
@@ -4770,6 +4863,8 @@ if __name__ == "__main__":
     DATE_TOTAL_EXPORT_COMBO_INIT = 0
     RESULT_COMBO_VAR = 0
 
+    LOG_USE_VAR = IntVar()
+
     Right_InputDate1_Entry_Date = StringVar()
     Right_InputDate1_Entry_Date.set(todayvalue)
     Right_InputDate2_Entry_Date = StringVar()
@@ -4779,9 +4874,12 @@ if __name__ == "__main__":
     Program_Result_Save_Dir_Var = StringVar()
     TotalDate_Result_Save_Dir_Var = StringVar()
     Program_UseFile_Dir_Var = StringVar()
+    
     #root.file = filedialog.askopenfile(initialdir='path', title='select file', filetypes=(('jpeg files', '*.jgp'), ('all files', '*.*')))
     #root_dir = "C:/Users/nsn04/OneDrive/바탕 화면/integrative/FolderList"
 
+    pLog.append_log("",'프로그램을 시작했습니다.')
+    pLog.append_log("작업 파일 경로",MY_OS_GETCWD)
     #============================================================
     #[프로그램]System init
     #============================================================
@@ -4824,66 +4922,52 @@ if __name__ == "__main__":
         pLog.append_log("실행init [sys_date.txt]:", "sys_date.txt 파일 없음-생성")
         f = open("./res/sys/sys_date.txt", "w")
         f.close()
+
     #res - sys - file[systemp] - init
-    #readsplit_text[0] : 0:다크모드 비활성, 1:다크모드 활성
-    #readsplit_text[1] : 등록된 사용자 경로
-    #readsplit_text[2] : 규격 체크
-    #readsplit_text[3] : 비고 체크
-    #readsplit_text[4] : 시간값 제거 체크
-    #readsplit_text[5] : 날짜 반영 체크
-    #readsplit_text[6] : 중복 제거 체크
-    #readsplit_text[7] : 시간값 종류
-    #readsplit_text[8] : 툴팁 사용
-    #readsplit_text[9] : 요일별 종합 - 불러올 값 콤보박스[0,1,2]
-    #readsplit_text[10] : 요일별 종합 - 내보낼 값 콤보박스[0,1,2]
-    #readsplit_text[11] : 메인 결과 내보내기 경로 설정
-    #readsplit_text[12] : 프로그램 작업 목록 저장 경로 설정
-    #readsplit_text[13] : 요일별 종합 결과 확인 저장 경로 설정
-    #readsplit_text[14] : 메인 - 결과 콤보박스 값
-    #readsplit_text[15] : 프로그램에서 사용할 파일이 있는 폴더 경로 설정
     if os.path.isfile('./res/sys/systemp.txt') == True: #시스템 파일이 존재하면
         openfile = open('./res/sys/systemp.txt','r',encoding="utf-8")
         readtext = openfile.read()
         readsplit_text = readtext.split("\n")
         openfile.close()
 
-        DARKMODE_VAR.set(readsplit_text[0])
+        DARKMODE_VAR.set(readsplit_text[0])#readsplit_text[0] : 0:다크모드 비활성, 1:다크모드 활성
         
-        StandardCheckbox_Var.set(readsplit_text[2])
-        NoteCheckBox_Var.set(readsplit_text[3])
-        RemoveTimeCheckbox_Var.set(readsplit_text[4])
-        RemoveDateCheckbox_Var.set(readsplit_text[5])
-        RemoveReduplicationCheckbox_Var.set(readsplit_text[6])
-        TimeKind_Var.set(readsplit_text[7])
-        ToolTipCheckbox_Var.set(readsplit_text[8])
-        DATE_TOTAL_IMPORT_COMBO_INIT = readsplit_text[9]
-        DATE_TOTAL_EXPORT_COMBO_INIT = readsplit_text[10]
+        StandardCheckbox_Var.set(readsplit_text[2])#readsplit_text[2] : 규격 체크
+        NoteCheckBox_Var.set(readsplit_text[3])#readsplit_text[3] : 비고 체크
+        RemoveTimeCheckbox_Var.set(readsplit_text[4])#readsplit_text[4] : 시간값 제거 체크
+        RemoveDateCheckbox_Var.set(readsplit_text[5])#readsplit_text[5] : 날짜 반영 체크
+        RemoveReduplicationCheckbox_Var.set(readsplit_text[6])#readsplit_text[6] : 중복 제거 체크
+        TimeKind_Var.set(readsplit_text[7])#readsplit_text[7] : 시간값 종류
+        ToolTipCheckbox_Var.set(readsplit_text[8])#readsplit_text[8] : 툴팁 사용
+        DATE_TOTAL_IMPORT_COMBO_INIT = readsplit_text[9]#readsplit_text[9] : 요일별 종합 - 불러올 값 콤보박스[0,1,2]
+        DATE_TOTAL_EXPORT_COMBO_INIT = readsplit_text[10]#readsplit_text[10] : 요일별 종합 - 내보낼 값 콤보박스[0,1,2]
 
-        #TODO:파일 경로가 있는지 확인할것
-        if os.path.isdir(readsplit_text[11]) == True:
+        if os.path.isdir(readsplit_text[11]) == True:#readsplit_text[11] : 메인 결과 내보내기 경로 설정
             TempPath = readsplit_text[11]
             Program_Save_Dir_Var.set(readsplit_text[11])
         else:
             Program_Save_Dir_Var.set(MY_OS_GETCWD+"/Result/작업 목록 데이터")
 
-        if os.path.isdir(readsplit_text[12]) == True:
+        if os.path.isdir(readsplit_text[12]) == True:#readsplit_text[12] : 프로그램 작업 목록 저장 경로 설정
             Program_Result_Save_Dir_Var.set(readsplit_text[12])
         else:
             Program_Result_Save_Dir_Var.set(MY_OS_GETCWD+"/Result/최종 결과")
 
-        if os.path.isdir(readsplit_text[13]) == True:
+        if os.path.isdir(readsplit_text[13]) == True:#readsplit_text[13] : 요일별 종합 결과 확인 저장 경로 설정
             TotalDate_Result_Save_Dir_Var.set(readsplit_text[13])
         else:
             TotalDate_Result_Save_Dir_Var.set(MY_OS_GETCWD+"/Result/요일 종합")
 
-        RESULT_COMBO_VAR = readsplit_text[14]
+        RESULT_COMBO_VAR = readsplit_text[14]#readsplit_text[14] : 메인 - 결과 콤보박스 값
 
-        if os.path.isdir(readsplit_text[15]) == True:
+        if os.path.isdir(readsplit_text[15]) == True:#readsplit_text[15] : 프로그램에서 사용할 파일이 있는 폴더 경로 설정
             Program_UseFile_Dir_Var.set(readsplit_text[15])
         else:
             Program_UseFile_Dir_Var.set(MY_OS_GETCWD+"/FolderList")
 
-        if readsplit_text[1] != "":
+        LOG_USE_VAR.set(readsplit_text[16])#readsplit_text[16] : 로그 기록 사용
+
+        if readsplit_text[1] != "":    #readsplit_text[1] : 등록된 사용자 경로
             USERNAMEDIR_VAR = readsplit_text[1]
 
             strx=str(USERNAMEDIR_VAR)
@@ -4934,51 +5018,63 @@ if __name__ == "__main__":
         print(MY_OS_GETCWD+"/Result/요일 종합",file=inituserfile)#13
         print(0,file=inituserfile)#14
         print(MY_OS_GETCWD+"/FolderList",file=inituserfile)#15
+        print(0,file=inituserfile)#16
         inituserfile.close()
     #==============================
+    if LOG_USE_VAR.get() == 0:
+        pLog.hide()
+    else:
+        pLog.show()
+        
     #res - banList - init
     if os.path.isdir("./res/banList"):
-        pass
+        pLog.append_log("실행init [res_banList]:", "res_banList 폴더 존재")
     else:
         os.mkdir("./res/banList")
+        pLog.append_log("실행init [res_banList]:", "res_banList 없음-폴더 생성")
     #res - banList - file[BanListFile] - init
     if os.path.isfile("./res/banList/BanListFile.txt"):
-        pass
+        pLog.append_log("실행init [BanListFile]:", "BanListFile 파일 존재")
     else:
         f = open("./res/banList/BanListFile.txt", 'w')
         f.close()
+        pLog.append_log("실행init [BanListFile]:", "BanListFile 없음-파일 생성")
     #==============================
     #FolderList - init
     if os.path.isdir("./FolderList"):
-        pass
+        pLog.append_log("실행init [FolderList]:", "FolderList 폴더 존재")
     else:
         os.mkdir("./FolderList")
+        pLog.append_log("실행init [FolderList]:", "FolderList 없음-폴더 생성")
     #==============================
     #Result - init
     if os.path.isdir("./Result"):
-        pass
+        pLog.append_log("실행init [Result]:", "Result 폴더 존재")
     else:
         os.mkdir("./Result")
+        pLog.append_log("실행init [Result]:", "Result 없음-폴더 생성")
     if os.path.isdir("./Result/요일 종합"):
-        pass
+        pLog.append_log("실행init [Result_요일 종합]:", "Result_요일 종합 폴더 존재")
     else:
         os.mkdir("./Result/요일 종합")
+        pLog.append_log("실행init [Result_요일 종합]:", "Result_요일 종합 없음-폴더 생성")
     if os.path.isdir("./Result/작업 목록 데이터"):
-        pass
+        pLog.append_log("실행init [Result_작업 목록 데이터]:", "Result_작업 목록 데이터 폴더 존재")
     else:
         os.mkdir("./Result/작업 목록 데이터")
+        pLog.append_log("실행init [Result_작업 목록 데이터]:", "Result_작업 목록 데이터 없음-폴더 생성")
     if os.path.isdir("./Result/최종 결과"):
-        pass
+        pLog.append_log("실행init [Result_최종 결과]:", "Result_최종 결과 폴더 존재")
     else:
         os.mkdir("./Result/최종 결과")
+        pLog.append_log("실행init [Result_최종 결과]:", "Result_최종 결과 없음-폴더 생성")
     #==============================
     #TempFileList - init
     if os.path.isdir("./TempFileList"):
-        pass
+        pLog.append_log("실행init [TempFileList]:", "TempFileList 폴더 존재")
     else:
         os.mkdir("./TempFileList")
-
-    
+        pLog.append_log("실행init [TempFileList]:", "TempFileList 없음-폴더 생성")
 
     #============================================================
     #[메인 프레임] init
@@ -5160,7 +5256,7 @@ if __name__ == "__main__":
     Right_Time_Combo.place(x=150,y=305,height=26)
     Right_Time_Combo_ttp = CreateToolTip(Right_Time_Combo, "기본 시간대 이외의 시간 입력이 가능합니다.")
 
-    Right_InputTimeNum_Button = tkinter.Button(R_frame, text='확인', command=BTN_InputTimeNum, overrelief="solid", width=6)
+    Right_InputTimeNum_Button = tkinter.Button(R_frame, text='적용', command=BTN_InputTimeNum, overrelief="solid", width=6)
     Right_InputTimeNum_Button.place(x=225,y=305)
 
     Right_Time_CheckBox=Checkbutton(R_frame,text="시간값 제거",variable=RemoveTimeCheckbox_Var,background="lightblue")
@@ -5260,7 +5356,6 @@ if __name__ == "__main__":
     root.config(menu=menubar)
     root.mainloop()
 
-    pLog.run()
 
 
 #program 종료시
