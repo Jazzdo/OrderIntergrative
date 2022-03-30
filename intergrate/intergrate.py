@@ -119,7 +119,7 @@ def BTN_ConvertHWP():
     root_dir = filedialog.askdirectory(initialdir=Program_UseFile_Dir_Var.get())
     if not root_dir:
         return
-    SAVE_DIR = os.getcwd() + '\\TempFileList\\'
+    SAVE_DIR = MY_OS_GETCWD+ '/TempFileList/'
     
     #if root_dir[-4:] == ".hwp":
     hwp = win32.gencache.EnsureDispatch('HWPFrame.HwpObject')  # 한/글 열기
@@ -210,7 +210,7 @@ Total_treeNumCount = 1
 DateSetCount = 0
 def Total_DaySetting():
     pLog.append_log("버튼 동작 실행: ", "날짜 세팅")
-    os.startfile('.\\res\\sys\\sys_date.txt')
+    os.startfile('./res/sys/sys_date.txt')
 
 #============================================================
 #[요일별 종합 - 버튼] 결과 확인
@@ -222,7 +222,7 @@ def Total_Result():
     global Total_list_Combo_Import
     global Total_list_Combo_Export
     
-    TEMP_DIR = os.getcwd() + '\\TempFileList\\'
+    TEMP_DIR = MY_OS_GETCWD + '/TempFileList/'
     pLog.append_log("TEMP_DIR", TEMP_DIR)
     #임시 파일 지우기
     for delname in glob.glob(TEMP_DIR+"_Total*.txt"):
@@ -2075,15 +2075,15 @@ def MenuBTN_UserSetting():
     USERNAMEDIR_VAR = strx
 
 def BTN_Open_UserFolder():
-    pLog.append_log("유저 폴더 실행: ",os.getcwd()+"\\res\\user")
-    os.startfile(os.getcwd()+"\\res\\user")
+    pLog.append_log("유저 폴더 실행: ",MY_OS_GETCWD+"\\res\\user")
+    os.startfile(MY_OS_GETCWD+"\\res\\user")
 #============================================================
 #[메인 - 메뉴바 - 설정] 제외시킬 재료 설정
 #[메인 - 우측패널 - 수량 입력 - 버튼] 제외시킬 재료
 #============================================================
 def MenuBTN_OpenBan():
-    pLog.append_log("벤 파일 실행: ",os.getcwd()+'\\res\\banList\\BanListFile.txt')
-    os.startfile(os.getcwd()+'\\res\\banList\\BanListFile.txt')
+    pLog.append_log("벤 파일 실행: ",MY_OS_GETCWD+'\\res\\banList\\BanListFile.txt')
+    os.startfile(MY_OS_GETCWD+'\\res\\banList\\BanListFile.txt')
     
 
 #============================================================
@@ -2316,11 +2316,11 @@ def BTN_SettingReset():
         print(0,file=userfile)#8
         print(0,file=userfile)#9
         print(0,file=userfile)#10
-        print(os.getcwd()+"\\Result\\작업 목록 데이터",file=userfile)#11
-        print(os.getcwd()+"\\Result\\최종 결과",file=userfile)#12
-        print(os.getcwd()+"\\Result\\요일 종합",file=userfile)#13
+        print(MY_OS_GETCWD+"\\Result\\작업 목록 데이터",file=userfile)#11
+        print(MY_OS_GETCWD+"\\Result\\최종 결과",file=userfile)#12
+        print(MY_OS_GETCWD+"\\Result\\요일 종합",file=userfile)#13
         print(0,file=userfile)#14
-        print(os.getcwd()+"\\FolderList",file=userfile)#15
+        print(MY_OS_GETCWD+"\\FolderList",file=userfile)#15
         userfile.close()
         NowSettingFile.set("")
         USERNAMEDIR_VAR = ""
@@ -2500,7 +2500,7 @@ class GUIT():
 #============================================================
 def BTN_Net():
     pLog.append_log("버튼 동작 실행:", "메뉴바 - 상세 사용법")
-    url = os.getcwd()+"/res/how_to_use/how_to_use.html"
+    url = MY_OS_GETCWD+"/res/how_to_use/how_to_use.html"
     webbrowser.open(url)
 
 #============================================================
@@ -2508,7 +2508,7 @@ def BTN_Net():
 #============================================================
 def BTN_Net_Key(event):
     pLog.append_log("버튼 동작 실행:", "메뉴바 - 상세 사용법[단축키]")
-    url = os.getcwd()+"/res/how_to_use/how_to_use.html"
+    url = MY_OS_GETCWD+"/res/how_to_use/how_to_use.html"
     webbrowser.open(url)
 
 #============================================================
@@ -3703,7 +3703,7 @@ def BTN_Result():
             global refineListItemName
             BTN_InputDate_Check()#날짜 검증용
             if RemoveTimeCheckbox_Var.get() == 1: #시간값 제거하겠다(old ver)
-                filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=Program_Result_Save_Dir_Var.get(), title="Select file",defaultextension=".hwp", filetypes=[("HWP files", "*.hwp")])
+                filename = filedialog.asksaveasfilename(initialfile=datetime.datetime.today().strftime("%Y_%m_%d"),initialdir=r"{}".format(Program_Result_Save_Dir_Var.get()), title="Select file",defaultextension=".hwp", filetypes=[("HWP files", "*.hwp")])
                 pLog.append_log("fileName: ", filename)
                 refine_table()
                 hwp = win32.gencache.EnsureDispatch('HWPFrame.HwpObject')  # 한/글 열기
@@ -4720,17 +4720,18 @@ def LeaveNameInfoLabel(event):
 if __name__ == "__main__":
     root = TkinterDnD.Tk()
     root.title("발주 종합")
-    
+    MY_OS_GETCWD = os.getcwd().replace("\\","/")
+    print(MY_OS_GETCWD)
     root.geometry("800x660+550+200")
     root.option_add("*Font","맑은고딕 12")
     root.resizable(False, False) #창 사이즈 변경 불가능
-    root.iconbitmap(os.getcwd() + '\\res\\icon.ico')
+    root.iconbitmap(MY_OS_GETCWD + '/res/icon.ico')
     root.attributes('-topmost', True)
     root.attributes('-topmost', False)
     pLog = GUIT()
     # 1 시작시 보이는 메세지 'append_log'
     pLog.append_log("",'프로그램을 시작했습니다.')
-    pLog.append_log("작업 파일",os.getcwd())
+    pLog.append_log("작업 파일",MY_OS_GETCWD)
     SearchRadioValue = IntVar(None,1) #RIGHT_Frame 라디오 버튼 선택중인 값
     days = ['월요일','화요일','수요일','목요일','금요일','토요일','일요일']
     
@@ -4787,7 +4788,7 @@ if __name__ == "__main__":
     #Appdata - gen_py - delete
     path = os.getenv('APPDATA')
     appdataPath = path[:path.rfind("\\")]
-    genPath = "\\Local\\Temp\\gen_py"
+    genPath = "/Local/Temp/gen_py"
     app_genPath = appdataPath + genPath
     if os.path.isdir(app_genPath) == True:
         shutil.rmtree(app_genPath)
@@ -4860,26 +4861,27 @@ if __name__ == "__main__":
 
         #TODO:파일 경로가 있는지 확인할것
         if os.path.isdir(readsplit_text[11]) == True:
+            TempPath = readsplit_text[11]
             Program_Save_Dir_Var.set(readsplit_text[11])
         else:
-            Program_Save_Dir_Var.set(os.getcwd()+"\\Result\\작업 목록 데이터")
+            Program_Save_Dir_Var.set(MY_OS_GETCWD+"/Result/작업 목록 데이터")
 
         if os.path.isdir(readsplit_text[12]) == True:
             Program_Result_Save_Dir_Var.set(readsplit_text[12])
         else:
-            Program_Result_Save_Dir_Var.set(os.getcwd()+"\\Result\\최종 결과")
+            Program_Result_Save_Dir_Var.set(MY_OS_GETCWD+"/Result/최종 결과")
 
         if os.path.isdir(readsplit_text[13]) == True:
             TotalDate_Result_Save_Dir_Var.set(readsplit_text[13])
         else:
-            TotalDate_Result_Save_Dir_Var.set(os.getcwd()+"\\Result\\요일 종합")
+            TotalDate_Result_Save_Dir_Var.set(MY_OS_GETCWD+"/Result/요일 종합")
 
         RESULT_COMBO_VAR = readsplit_text[14]
 
         if os.path.isdir(readsplit_text[15]) == True:
             Program_UseFile_Dir_Var.set(readsplit_text[15])
         else:
-            Program_UseFile_Dir_Var.set(os.getcwd()+"\\FolderList")
+            Program_UseFile_Dir_Var.set(MY_OS_GETCWD+"/FolderList")
 
         if readsplit_text[1] != "":
             USERNAMEDIR_VAR = readsplit_text[1]
@@ -4927,11 +4929,11 @@ if __name__ == "__main__":
         print(0,file=inituserfile)#8
         print(0,file=inituserfile)#9
         print(0,file=inituserfile)#10
-        print(os.getcwd()+"\\Result\\작업 목록 데이터",file=inituserfile)#11
-        print(os.getcwd()+"\\Result\\최종 결과",file=inituserfile)#12
-        print(os.getcwd()+"\\Result\\요일 종합",file=inituserfile)#13
+        print(MY_OS_GETCWD+"/Result/작업 목록 데이터",file=inituserfile)#11
+        print(MY_OS_GETCWD+"/Result/최종 결과",file=inituserfile)#12
+        print(MY_OS_GETCWD+"/Result/요일 종합",file=inituserfile)#13
         print(0,file=inituserfile)#14
-        print(os.getcwd()+"\\FolderList",file=inituserfile)#15
+        print(MY_OS_GETCWD+"/FolderList",file=inituserfile)#15
         inituserfile.close()
     #==============================
     #res - banList - init
